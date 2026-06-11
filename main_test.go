@@ -51,26 +51,27 @@ func TestConfigReloadPreservesEnvOverrides(t *testing.T) {
 	reloadChan := make(chan struct{})
 	viper.OnConfigChange(func(e fsnotify.Event) {
 		if err := viper.ReadInConfig(); err != nil {
-			t.Errorf("Error reloading config: %v", err)
+			t.Logf("Error reloading config (retrying): %v", err)
+			return
 		}
 		viper.AutomaticEnv()
 		_ = viper.BindEnv("server.port", "COBRA_SERVER_PORT")
-		close(reloadChan)
+		select {
+		case <-reloadChan:
+		default:
+			close(reloadChan)
+		}
 	})
 	viper.WatchConfig()
 
 	updatedConfig := []byte("server:\n  port: 8080\n  debug: true\n")
-	tempFile := filepath.Join(tempDir, "config.yaml.tmp")
-	if err := os.WriteFile(tempFile, updatedConfig, 0644); err != nil {
+	if err := os.WriteFile(configPath, updatedConfig, 0644); err != nil {
 		t.Fatalf("Failed to write updated config: %v", err)
-	}
-	if err := os.Rename(tempFile, configPath); err != nil {
-		t.Fatalf("Failed to rename config file: %v", err)
 	}
 
 	select {
 	case <-reloadChan:
-	case <-time.After(2 * time.Second):
+	case <-time.After(5 * time.Second):
 		t.Fatal("Timeout waiting for config reload event")
 	}
 

@@ -42,7 +42,7 @@ func TestRetryInterceptorMetadataPropagation(t *testing.T) {
 
 	serviceDesc := grpc.ServiceDesc{
 		ServiceName: "test.MockService",
-		HandlerType: (*mockService)(nil),
+		HandlerType: (*interface{})(nil),
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "TestCall",
