@@ -14,6 +14,10 @@ import (
 	"google.golang.org/protobuf/types/known/emptypb"
 )
 
+type MockService interface {
+	TestCall(ctx context.Context, req *emptypb.Empty) (*emptypb.Empty, error)
+}
+
 type mockService struct {
 	attempts int
 	metadata []metadata.MD
@@ -42,7 +46,7 @@ func TestRetryInterceptorMetadataPropagation(t *testing.T) {
 
 	serviceDesc := grpc.ServiceDesc{
 		ServiceName: "test.MockService",
-		HandlerType: (*interface{})(nil),
+		HandlerType: (*MockService)(nil),
 		Methods: []grpc.MethodDesc{
 			{
 				MethodName: "TestCall",
